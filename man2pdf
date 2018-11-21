@@ -1,0 +1,75 @@
+#! /bin/bash
+
+<< ---
+
+NAME
+man2pdf -- Save a man page as a PDF.
+
+SYNOPSIS
+man2pdf [-o] [*name*]
+
+DESCRIPTION
+Save a man page as a PDF, optionally opening after saving it. The PDF is saved 
+in the current directory and given the same name as the man page with a pdf 
+extension.
+
+OPTIONS
+-o  Open PDF file after creating it.
+
+AUTHOR
+Jomo Z. <jomoz@me.com>
+
+CREATED
+November 20, 2018
+
+LAST UPDATED
+November 20, 2018       
+
+---
+
+usage='Usage: man2pdf [-o] [\e[4mname\e[0m]\n'
+
+unset open_file
+
+while getopts "o" opt; do
+    case $opt in
+	o)
+	    open_file=1
+	    ;;
+	\?)
+	    printf "$usage"
+	    exit 1
+	    ;;
+    esac
+done
+
+# Shift processed options away
+shift $((OPTIND-1))
+
+# Get man page name. Print usage message if not provided.
+name=$@
+if [ -z $name ]; then
+    printf "$usage"
+    exit 1
+fi
+
+# Calculate filenames
+man_file=$(man -w $name)
+
+# Exit if man page not found. (man generates its own error message so
+# don't need to print usage message.)
+if [ $? -eq 1 ]; then
+    exit 1
+fi    
+
+dvi_file="$name.dvi"
+pdf_file="$name.pdf"
+
+# Convert from man format to DVI, then DVI to PDF, and then delete intermediate DVI file
+groff -T dvi -m mandoc $man_file > $dvi_file
+dvipdfmx $dvi_file 2>/dev/null
+rm $dvi_file
+
+if [ $open_file ]; then
+    open $pdf_file
+fi

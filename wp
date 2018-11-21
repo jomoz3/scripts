@@ -1,0 +1,69 @@
+#! /bin/bash
+
+<< ---
+
+NAME
+wp -- Search for a term on Wikipedia, or display the extract for an
+article.
+
+SYNOPSIS
+wp [-e] [*name*]
+
+DESCRIPTION
+Search Wikipedia for name using default browser. If -e is specified,
+retrieve and display article page extract.
+
+OPTIONS
+-e  Display article page extract
+
+AUTHOR
+Jomo Z. <jomoz@me.com>
+
+CREATED
+November 20, 2018
+
+LAST UPDATED
+November 20, 2018       
+
+---
+
+usage='Usage: wp [-e] [\e[4mname\e[0m]\n'
+
+unset disp_extract
+
+while getopts "e" opt; do
+    case $opt in
+	e)
+	    disp_extract=1
+	    ;;
+	\?)
+	    printf "$usage"
+	    exit 1
+	    ;;
+    esac
+done
+
+# Shift processed options away
+shift $((OPTIND-1))
+
+# Get Wikipedia article name. Print usage message if article name
+# not provided.
+name=$@
+if [ -z $name ]; then
+    printf "$usage"
+    exit 1
+fi
+
+if [ $disp_extract ]; then
+
+    # Calculate URL
+    url="https://en.wikipedia.org/api/rest_v1/page/summary/$name"
+    curl -sL $url | jq -M --raw-output '.extract' | fold -s
+    
+else
+
+    # Calculate URL
+    url="https://en.wikipedia.org/wiki/$name"
+    open $url
+    
+fi
